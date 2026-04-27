@@ -6,7 +6,7 @@
         :root {
             --retro-bg: #EED7D8; 
             --panel-white: #F6F3EB;
-            --tile-yellow: #F8D316;
+            --tile-soft-yellow: #F2E5BF; 
             --accent-orange: #E9531D;
             --text-dark: #3D1B11;
             --border-3d-outset: 2px solid var(--text-dark);
@@ -25,6 +25,9 @@
 
         .screen { display: none; flex-direction: column; align-items: center; width: 100%; }
         .screen.active { display: flex; }
+
+        /* 修复重点：通过 gap 统一控制两个窗口的视觉间距 */
+        #gameScreen.active { gap: 10px; } 
 
         .window {
             background: var(--panel-white);
@@ -55,7 +58,17 @@
         }
         .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
 
-        .game-header { width: 1180px; margin-bottom: 30px; padding: 0 10px;}
+        /* 缩放设置 */
+        #gameScreen .window {
+            transform: scale(0.85);
+            transform-origin: center center;
+            /* 关键：取消由于缩放导致的额外空白占位，将外边距设为负值来抵消缩放产生的空隙 */
+            margin: -25px 0; 
+        }
+
+        .game-header { width: 1180px; padding: 10px; }
+        .grid-window { padding: 5px; }
+
         .progress-container { width: 100%; height: 8px; background: #CCC5C0; border: 1px solid var(--text-dark); border-radius: 4px; overflow: hidden; position: relative; }
         #progressBar { width: 0%; height: 100%; background: var(--accent-orange); transition: width 0.1s linear; }
 
@@ -65,20 +78,19 @@
         }
 
         .tile {
-            width: 60px; height: 60px; background: var(--tile-yellow);
+            width: 60px; height: 60px; background: var(--tile-soft-yellow); 
             color: var(--text-dark); display: flex; justify-content: center; align-items: center;
             font-size: 28px; 
             border: 2px solid var(--text-dark); border-radius: 3px; pointer-events: none;
-            font-weight: 800; /* 调整为适中的粗细 */
+            font-weight: 800;
             transition: transform 0.1s ease, background 0.1s ease;
         }
 
-        /* 加回倾斜效果 */
         .tile.highlight { 
             background: var(--accent-orange); 
             color: white; 
             border-color: #A03913; 
-            transform: scale(1.05) rotate(3deg); /* 倾斜效果 */
+            transform: scale(1.05) rotate(3deg);
             z-index: 2;
         }
 
@@ -109,14 +121,14 @@
     </div>
 
     <div id="gameScreen" class="screen">
-        <div class="game-header window" style="margin-bottom: 20px; align-items: stretch; padding: 10px;">
+        <div class="game-header window" style="align-items: stretch;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1.1rem; letter-spacing: 1px; font-weight: bold;">
                 <span id="scoreDisplay">SCORE: 0</span>
                 <span id="levelDisplay" style="color: var(--accent-orange);">NORMAL MODE</span>
             </div>
             <div class="progress-container"><div id="progressBar"></div></div>
         </div>
-        <div class="window" style="padding: 5px;">
+        <div class="window grid-window">
             <div class="grid" id="gameGrid"><div id="selectionBox"></div></div>
         </div>
     </div>
@@ -181,14 +193,16 @@
         e.preventDefault(); 
         isDragging = true;
         const rect = grid.getBoundingClientRect();
-        startX = e.clientX - rect.left; startY = e.clientY - rect.top;
+        startX = (e.clientX - rect.left) / 0.85; 
+        startY = (e.clientY - rect.top) / 0.85;
         selBox().style.display = 'block';
     });
 
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         const rect = grid.getBoundingClientRect();
-        let curX = e.clientX - rect.left, curY = e.clientY - rect.top;
+        let curX = (e.clientX - rect.left) / 0.85; 
+        let curY = (e.clientY - rect.top) / 0.85;
         let x = Math.min(startX, curX), y = Math.min(startY, curY);
         let w = Math.abs(startX - curX), h = Math.abs(startY - curY);
         
