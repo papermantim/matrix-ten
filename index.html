@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --retro-bg: #EED7D8; 
+            --panel-white: #F6F3EB;
+            --tile-yellow: #F8D316;
+            --accent-orange: #E9531D;
+            --text-dark: #3D1B11;
+            --border-3d-outset: 2px solid var(--text-dark);
+            --box-shadow-3d: inset 2px 2px 0 rgba(255,255,255,0.7), 4px 4px 0 rgba(0,0,0,0.2);
+            --box-shadow-btn: 3px 3px 0 rgba(0,0,0,0.3);
+        }
+
+        * { outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+        body { 
+            background: var(--retro-bg); margin: 0; overflow: hidden; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; font-family: 'Courier New', Courier, monospace;
+            user-select: none; color: var(--text-dark);
+        }
+
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .screen.active { display: flex; }
+
+        .window {
+            background: var(--panel-white);
+            border: var(--border-3d-outset);
+            box-shadow: var(--box-shadow-3d);
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .window-title {
+            width: 100%; height: 28px; background: #CFC5C0; 
+            border-bottom: var(--border-3d-outset);
+            margin-bottom: 20px; padding: 0 10px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-weight: bold; letter-spacing: 1px; font-size: 14px;
+        }
+        .window-controls { display: flex; gap: 4px; }
+        .win-btn { width: 16px; height: 16px; border: 1px solid var(--text-dark); border-radius: 50%; }
+
+        h1 { font-size: 2rem; letter-spacing: 2px; margin: 0 0 30px; text-transform: uppercase; font-weight: bold;}
+        
+        .btn {
+            background: #E0E0D8; border: var(--border-3d-outset); color: var(--text-dark);
+            padding: 12px 30px; font-size: 1rem; cursor: pointer; margin: 10px;
+            transition: all 0.1s; border-radius: 2px; letter-spacing: 1px; font-family: inherit; font-weight: bold;
+            box-shadow: var(--box-shadow-btn);
+        }
+        .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
+
+        .game-header { width: 1180px; margin-bottom: 30px; padding: 0 10px;}
+        .progress-container { width: 100%; height: 8px; background: #CCC5C0; border: 1px solid var(--text-dark); border-radius: 4px; overflow: hidden; position: relative; }
+        #progressBar { width: 0%; height: 100%; background: var(--accent-orange); transition: width 0.1s linear; }
+
+        .grid {
+            display: grid; grid-template-columns: repeat(18, 60px); grid-template-rows: repeat(10, 60px);
+            gap: 6px; position: relative; padding: 10px; cursor: crosshair;
+        }
+
+        .tile {
+            width: 60px; height: 60px; background: var(--tile-yellow);
+            color: var(--text-dark); display: flex; justify-content: center; align-items: center;
+            font-size: 28px; 
+            border: 2px solid var(--text-dark); border-radius: 3px; pointer-events: none;
+            font-weight: 800; /* 调整为适中的粗细 */
+            transition: transform 0.1s ease, background 0.1s ease;
+        }
+
+        /* 加回倾斜效果 */
+        .tile.highlight { 
+            background: var(--accent-orange); 
+            color: white; 
+            border-color: #A03913; 
+            transform: scale(1.05) rotate(3deg); /* 倾斜效果 */
+            z-index: 2;
+        }
+
+        .tile.removed { animation: shrink-away 0.3s forwards; pointer-events: none; }
+        @keyframes shrink-away {
+            0% { transform: scale(1) rotate(3deg); opacity: 1; }
+            100% { transform: scale(0) rotate(20deg); opacity: 0; }
+        }
+
+        #selectionBox {
+            position: absolute; border: 2px solid var(--accent-orange);
+            background: rgba(233, 83, 29, 0.1); pointer-events: none; display: none; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="startScreen" class="screen active">
+        <div class="window" style="padding: 0 0 30px; width: 500px;">
+            <div class="window-title">SYSTEM_LOGIN <div class="window-controls"><div class="win-btn" style="background:#5B5B5A"></div><div class="win-btn" style="background:#B3B1AD"></div></div></div>
+            <h1>MATRIX TEN</h1>
+            <div style="display: flex; flex-direction: column;">
+                <button class="btn" onclick="startGame(1)">SIMPLE MODE</button>
+                <button class="btn" onclick="startGame(2)">NORMAL MODE</button>
+                <button class="btn" onclick="startGame(3)">HARD MODE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+        <div class="game-header window" style="margin-bottom: 20px; align-items: stretch; padding: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1.1rem; letter-spacing: 1px; font-weight: bold;">
+                <span id="scoreDisplay">SCORE: 0</span>
+                <span id="levelDisplay" style="color: var(--accent-orange);">NORMAL MODE</span>
+            </div>
+            <div class="progress-container"><div id="progressBar"></div></div>
+        </div>
+        <div class="window" style="padding: 5px;">
+            <div class="grid" id="gameGrid"><div id="selectionBox"></div></div>
+        </div>
+    </div>
+
+    <div id="endScreen" class="screen">
+        <div class="window" style="padding: 0 0 40px; width: 500px; text-align: center;">
+            <div class="window-title">SESSION_REPORT <div class="window-controls"><div class="win-btn" style="background:var(--accent-orange)"></div><div class="win-btn" style="background:#B3B1AD"></div></div></div>
+            <h2 style="color: var(--accent-orange); text-transform: uppercase; margin-top: 20px; font-weight: bold;">SESSION COMPLETED</h2>
+            <div style="font-size: 5rem; margin: 10px 0; font-weight: bold;" id="finalScore">0</div>
+            <div id="finalLevelDesc" style="color: #666; margin-bottom: 30px; letter-spacing: 1px; font-weight: bold;"></div>
+            <button class="btn" onclick="location.reload()">RESTART</button>
+        </div>
+    </div>
+
+<script>
+    const ROWS = 10, COLS = 18, TOTAL_TIME = 120;
+    let score = 0, level = 1, timeLeft = 0, isDragging = false, startX, startY, tiles = [], timer = null;
+    const modeNames = ["", "SIMPLE MODE", "NORMAL MODE", "HARD MODE"];
+
+    function startGame(lv) {
+        level = lv;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('gameScreen').classList.add('active');
+        document.getElementById('levelDisplay').innerText = modeNames[lv];
+        initGrid();
+        startTimer();
+    }
+
+    function initGrid() {
+        const gridEl = document.getElementById('gameGrid');
+        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
+        tiles = [];
+        for (let i = 0; i < ROWS * COLS; i++) {
+            let val = Math.floor(Math.random() * 9) + 1;
+            const el = document.createElement('div');
+            el.className = 'tile';
+            el.innerText = val;
+            gridEl.appendChild(el);
+            tiles.push({ el, val, removed: false });
+        }
+    }
+
+    function startTimer() {
+        timer = setInterval(() => {
+            timeLeft += 0.1;
+            document.getElementById('progressBar').style.width = (timeLeft / TOTAL_TIME) * 100 + '%';
+            if (timeLeft >= TOTAL_TIME) { clearInterval(timer); showEnd(); }
+        }, 100);
+    }
+
+    function showEnd() {
+        document.getElementById('gameScreen').classList.remove('active');
+        document.getElementById('endScreen').classList.add('active');
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('finalLevelDesc').innerText = "MODE: " + modeNames[level];
+    }
+
+    const grid = document.getElementById('gameGrid');
+    const selBox = () => document.getElementById('selectionBox'); 
+
+    grid.addEventListener('mousedown', (e) => {
+        e.preventDefault(); 
+        isDragging = true;
+        const rect = grid.getBoundingClientRect();
+        startX = e.clientX - rect.left; startY = e.clientY - rect.top;
+        selBox().style.display = 'block';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const rect = grid.getBoundingClientRect();
+        let curX = e.clientX - rect.left, curY = e.clientY - rect.top;
+        let x = Math.min(startX, curX), y = Math.min(startY, curY);
+        let w = Math.abs(startX - curX), h = Math.abs(startY - curY);
+        
+        const box = selBox();
+        box.style.left = x + 'px'; box.style.top = y + 'px';
+        box.style.width = w + 'px'; box.style.height = h + 'px';
+
+        tiles.forEach(t => {
+            if (t.removed) return;
+            const inBox = !(t.el.offsetLeft > x + w || t.el.offsetLeft + 60 < x || t.el.offsetTop > y + h || t.el.offsetTop + 60 < y);
+            t.el.classList.toggle('highlight', inBox);
+        });
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false; 
+        selBox().style.display = 'none';
+        const selected = tiles.filter(t => t.el.classList.contains('highlight'));
+        const sum = selected.reduce((acc, t) => acc + t.val, 0);
+
+        if (sum === 10 && selected.length > 0) {
+            selected.forEach(t => {
+                t.removed = true;
+                t.el.classList.add('removed');
+            });
+            score += selected.length * 10;
+            document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+        }
+        tiles.forEach(t => t.el.classList.remove('highlight'));
+    });
+</script>
+</body>
+</html>
