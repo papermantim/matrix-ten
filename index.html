@@ -163,28 +163,24 @@
         tiles = [];
         for (let i = 0; i < ROWS * COLS; i++) {
             let val;
-            const r = Math.random(); // 生成一个 0 到 1 之间的随机数
+            const r = Math.random(); // 生成 0 到 1 之间的随机值
 
             if (level === 1) { 
-                // SIMPLE: 1-9 都有，但 80% 的概率出现 1-4
-                if (r < 0.8) {
-                    val = Math.floor(Math.random() * 4) + 1; // 1,2,3,4
-                } else if (r < 0.95) {
-                    val = Math.floor(Math.random() * 2) + 5; // 5,6
+                // SIMPLE: 1-5 占 65%，6-9 占 35%
+                if (r < 0.65) {
+                    val = Math.floor(Math.random() * 5) + 1; // 1,2,3,4,5
                 } else {
-                    val = Math.floor(Math.random() * 3) + 7; // 7,8,9 (极少出现)
+                    val = Math.floor(Math.random() * 4) + 6; // 6,7,8,9
                 }
             } else if (level === 2) { 
-                // NORMAL: 1-9 完全随机，均匀分布
+                // NORMAL: 1-9 均匀分布
                 val = Math.floor(Math.random() * 9) + 1;
             } else { 
-                // HARD: 1-9 都有，但 70% 的概率出现 7-9
-                if (r < 0.7) {
-                    val = Math.floor(Math.random() * 3) + 7; // 7,8,9
-                } else if (r < 0.9) {
-                    val = Math.floor(Math.random() * 3) + 4; // 4,5,6
+                // HARD: 6-9 占 60%，1-5 占 40%
+                if (r < 0.6) {
+                    val = Math.floor(Math.random() * 4) + 6; // 6,7,8,9
                 } else {
-                    val = Math.floor(Math.random() * 3) + 1; // 1,2,3 (变得很稀缺)
+                    val = Math.floor(Math.random() * 5) + 1; // 1,2,3,4,5
                 }
             }
 
@@ -195,7 +191,6 @@
             tiles.push({ el, val, removed: false });
         }
     }
-
     function startTimer() {
         timer = setInterval(() => {
             timeLeft += 0.1;
