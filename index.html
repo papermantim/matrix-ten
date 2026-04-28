@@ -15,13 +15,8 @@
             --box-shadow-btn: 3px 3px 0 rgba(0,0,0,0.3);
         }
 
-        * { 
-            outline: none; 
-            -webkit-tap-highlight-color: transparent; 
-            box-sizing: border-box; 
-            /* 关键：防止 iPad 上的系统手势干扰 */
-            touch-action: none; 
-        }
+        /* 关键：touch-action: none 防止浏览器默认的手势干扰（如滑动翻页） */
+        * { outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; touch-action: none; }
 
         body { 
             background: var(--retro-bg); margin: 0; overflow: hidden; 
@@ -32,6 +27,7 @@
 
         .screen { display: none; flex-direction: column; align-items: center; width: 100%; }
         .screen.active { display: flex; }
+
         #gameScreen.active { gap: 10px; } 
 
         .window {
@@ -60,8 +56,8 @@
             padding: 12px 0; font-size: 1rem; cursor: pointer; margin: 6px;
             transition: all 0.1s; border-radius: 2px; letter-spacing: 1px; font-family: inherit; font-weight: bold;
             box-shadow: var(--box-shadow-btn);
-            min-width: 240px; text-align: center;
-            touch-action: manipulation;
+            min-width: 240px;
+            text-align: center;
         }
         .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
 
@@ -71,14 +67,11 @@
             gap: 25px; border-top: 2px dashed #B3B1AD;
         }
         
-        .setting-control {
-            display: flex; align-items: center; gap: 10px;
-            font-size: 14px; font-weight: 900; color: var(--text-dark);
-        }
+        .setting-control { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 900; color: var(--text-dark); letter-spacing: 0.5px; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+        input[type="range"] { width: 110px; accent-color: var(--accent-orange); cursor: pointer; height: 5px; }
 
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-        input[type="range"] { width: 110px; accent-color: var(--accent-orange); }
-
+        /* 游戏界面缩放：保持你的 0.85 缩放，这很适合 iPad 横屏 */
         #gameScreen .window { transform: scale(0.85); transform-origin: center center; margin: -25px 0; }
         .game-header { width: 1180px; padding: 10px; }
         .grid-window { padding: 5px; }
@@ -89,8 +82,6 @@
         .grid {
             display: grid; grid-template-columns: repeat(18, 60px); grid-template-rows: repeat(10, 60px);
             gap: 6px; position: relative; padding: 10px; cursor: crosshair;
-            /* 关键：确保触摸在网格上时不触发页面滚动 */
-            touch-action: none; 
         }
 
         .tile {
@@ -100,21 +91,11 @@
             font-weight: 800; transition: transform 0.1s ease, background 0.1s ease;
         }
 
-        .tile.highlight { 
-            background: var(--accent-orange); color: white; border-color: #A03913; 
-            transform: scale(1.05) rotate(3deg); z-index: 2;
-        }
-
+        .tile.highlight { background: var(--accent-orange); color: white; border-color: #A03913; transform: scale(1.05) rotate(3deg); z-index: 2; }
         .tile.removed { animation: shrink-away 0.3s forwards; pointer-events: none; }
-        @keyframes shrink-away {
-            0% { transform: scale(1) rotate(3deg); opacity: 1; }
-            100% { transform: scale(0) rotate(20deg); opacity: 0; }
-        }
+        @keyframes shrink-away { 0% { transform: scale(1) rotate(3deg); opacity: 1; } 100% { transform: scale(0) rotate(20deg); opacity: 0; } }
 
-        #selectionBox {
-            position: absolute; border: 2px solid var(--accent-orange);
-            background: rgba(233, 83, 29, 0.1); pointer-events: none; display: none; z-index: 10;
-        }
+        #selectionBox { position: absolute; border: 2px solid var(--accent-orange); background: rgba(233, 83, 29, 0.1); pointer-events: none; display: none; z-index: 10; }
     </style>
 </head>
 <body>
@@ -127,14 +108,8 @@
             <button class="btn" onclick="startGame(2)">NORMAL MODE</button>
             <button class="btn" onclick="startGame(3)">HARD MODE</button>
             <div class="audio-settings-row">
-                <div class="setting-control">
-                    <input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()">
-                    <label for="bgmToggle">ENABLE BGM</label>
-                </div>
-                <div class="setting-control">
-                    <span>VOLUME:</span>
-                    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" oninput="updateVolume()">
-                </div>
+                <div class="setting-control"><input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()"><label for="bgmToggle" style="cursor: pointer;">ENABLE BGM</label></div>
+                <div class="setting-control"><span>VOLUME:</span><input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" oninput="updateVolume()"></div>
             </div>
         </div>
     </div>
@@ -164,121 +139,47 @@
 
 <script>
     const sounds = {
-        menu: new Audio('01.wav'),
-        game: new Audio('02.mp3'),
-        click: new Audio('03.mp3'),
-        clear: new Audio('04.mp3'),
-        end: new Audio('05.wav')
+        menu: new Audio('01.wav'), game: new Audio('02.mp3'), click: new Audio('03.mp3'), clear: new Audio('04.mp3'), end: new Audio('05.wav')
     };
-    sounds.menu.loop = true;
-    sounds.game.loop = true;
+    sounds.menu.loop = true; sounds.game.loop = true;
 
-    let isBGMEnabled = true, currentVolume = 0.5;
+    let isBGMEnabled = true, currentVolume = 0.5, score = 0, level = 1, timeLeft = 0, isDragging = false, startX, startY, tiles = [], timer = null;
+    const modeNames = ["", "SIMPLE MODE", "NORMAL MODE", "HARD MODE"];
 
-    function updateVolume() {
-        currentVolume = document.getElementById('volumeSlider').value;
-        Object.values(sounds).forEach(s => s.volume = currentVolume);
-    }
+    function updateVolume() { currentVolume = document.getElementById('volumeSlider').value; Object.values(sounds).forEach(s => s.volume = currentVolume); }
+    function toggleBGM() { isBGMEnabled = document.getElementById('bgmToggle').checked; if (!isBGMEnabled) Object.values(sounds).forEach(s=>s.pause()); else if(document.getElementById('startScreen').classList.contains('active')) sounds.menu.play().catch(()=>{}); }
 
-    function toggleBGM() {
-        isBGMEnabled = document.getElementById('bgmToggle').checked;
-        if (!isBGMEnabled) { Object.values(sounds).forEach(s => s.pause()); }
-        else {
-            if (document.getElementById('startScreen').classList.contains('active')) sounds.menu.play().catch(()=>{});
-        }
-    }
-
-    // iPad 兼容：触摸任意位置解锁音频
-    document.body.addEventListener('touchstart', () => {
-        if (isBGMEnabled && document.getElementById('startScreen').classList.contains('active')) {
-            sounds.menu.play().catch(()=>{});
-        }
-    }, { once: true });
-
-    const ROWS = 10, COLS = 18, TOTAL_TIME = 120;
-    let score = 0, level = 1, timeLeft = 0, isDragging = false, startX, startY, tiles = [], timer = null;
-
-    function startGame(lv) {
-        level = lv;
-        sounds.menu.pause();
-        if (isBGMEnabled) { sounds.game.currentTime = 0; sounds.game.play().catch(()=>{}); }
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('gameScreen').classList.add('active');
-        document.getElementById('levelDisplay').innerText = ["", "SIMPLE MODE", "NORMAL MODE", "HARD MODE"][lv];
-        initGrid();
-        startTimer();
-    }
-
-    function initGrid() {
-        const gridEl = document.getElementById('gameGrid');
-        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
-        tiles = [];
-        for (let i = 0; i < ROWS * COLS; i++) {
-            let val;
-            const r = Math.random();
-            if (level === 1) r < 0.65 ? val = Math.floor(Math.random()*5)+1 : val = Math.floor(Math.random()*4)+6;
-            else if (level === 2) val = Math.floor(Math.random()*9)+1;
-            else r < 0.6 ? val = Math.floor(Math.random()*4)+6 : val = Math.floor(Math.random()*5)+1;
-            const el = document.createElement('div');
-            el.className = 'tile';
-            el.innerText = val;
-            gridEl.appendChild(el);
-            tiles.push({ el, val, removed: false });
-        }
-    }
-
-    function startTimer() {
-        timer = setInterval(() => {
-            timeLeft += 0.1;
-            document.getElementById('progressBar').style.width = (timeLeft/TOTAL_TIME)*100 + '%';
-            if (timeLeft >= TOTAL_TIME) { clearInterval(timer); showEnd(); }
-        }, 100);
-    }
-
-    function showEnd() {
-        sounds.game.pause();
-        if (isBGMEnabled) sounds.end.play().catch(()=>{});
-        document.getElementById('gameScreen').classList.remove('active');
-        document.getElementById('endScreen').classList.add('active');
-        document.getElementById('finalScore').innerText = score;
-    }
-
+    // 适配 iPad 的交互逻辑
     const grid = document.getElementById('gameGrid');
-    const selBox = () => document.getElementById('selectionBox');
+    const selBox = () => document.getElementById('selectionBox'); 
 
-    // 核心修复：获取位置的通用函数（兼容鼠标和触摸）
-    function getPos(e) {
+    // 辅助函数：统一获取鼠标或手指的坐标
+    function getEventPos(e) {
         const rect = grid.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         return {
-            x: (clientX - rect.left) / 0.85,
+            x: (clientX - rect.left) / 0.85, 
             y: (clientY - rect.top) / 0.85
         };
     }
 
     function handleStart(e) {
-        if (e.target.classList.contains('btn')) return; 
+        if (e.target.closest('.btn')) return;
         isDragging = true;
-        const pos = getPos(e);
+        sounds.click.currentTime = 0; sounds.click.play().catch(()=>{});
+        const pos = getEventPos(e);
         startX = pos.x; startY = pos.y;
         selBox().style.display = 'block';
-        sounds.click.currentTime = 0; sounds.click.play().catch(()=>{});
     }
 
     function handleMove(e) {
         if (!isDragging) return;
-        // 防止 iPad 滑动时页面跳动
-        if (e.cancelable) e.preventDefault();
-        
-        const pos = getPos(e);
-        let x = Math.min(startX, pos.x), y = Math.min(startY, pos.y);
-        let w = Math.abs(startX - pos.x), h = Math.abs(startY - pos.y);
-        
+        if (e.cancelable) e.preventDefault(); // 防止 iPad 滚动页面
+        const pos = getEventPos(e);
+        let x = Math.min(startX, pos.x), y = Math.min(startY, pos.y), w = Math.abs(startX - pos.x), h = Math.abs(startY - pos.y);
         const box = selBox();
-        box.style.left = x + 'px'; box.style.top = y + 'px';
-        box.style.width = w + 'px'; box.style.height = h + 'px';
-
+        box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.width = w + 'px'; box.style.height = h + 'px';
         tiles.forEach(t => {
             if (t.removed) return;
             const inBox = !(t.el.offsetLeft > x + w || t.el.offsetLeft + 60 < x || t.el.offsetTop > y + h || t.el.offsetTop + 60 < y);
@@ -288,8 +189,7 @@
 
     function handleEnd() {
         if (!isDragging) return;
-        isDragging = false;
-        selBox().style.display = 'none';
+        isDragging = false; selBox().style.display = 'none';
         const selected = tiles.filter(t => t.el.classList.contains('highlight'));
         const sum = selected.reduce((acc, t) => acc + t.val, 0);
         if (sum === 10 && selected.length > 0) {
@@ -301,17 +201,62 @@
         tiles.forEach(t => t.el.classList.remove('highlight'));
     }
 
-    // 绑定鼠标事件
+    // 绑定鼠标和触控事件
     grid.addEventListener('mousedown', handleStart);
     window.addEventListener('mousemove', handleMove, { passive: false });
     window.addEventListener('mouseup', handleEnd);
 
-    // 绑定触摸事件 (iPad)
     grid.addEventListener('touchstart', handleStart, { passive: false });
     window.addEventListener('touchmove', handleMove, { passive: false });
     window.addEventListener('touchend', handleEnd);
 
+    // 其余游戏逻辑保持不变
+    function startGame(lv) {
+        level = lv; sounds.menu.pause();
+        if (isBGMEnabled) { sounds.game.currentTime = 0; sounds.game.play().catch(()=>{}); }
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('gameScreen').classList.add('active');
+        document.getElementById('levelDisplay').innerText = modeNames[lv];
+        initGrid(); startTimer();
+    }
+
+    function initGrid() {
+        const gridEl = document.getElementById('gameGrid');
+        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
+        tiles = [];
+        for (let i = 0; i < 180; i++) {
+            let val; const r = Math.random();
+            if (level === 1) r < 0.65 ? val = Math.floor(Math.random() * 5) + 1 : val = Math.floor(Math.random() * 4) + 6;
+            else if (level === 2) val = Math.floor(Math.random() * 9) + 1;
+            else r < 0.6 ? val = Math.floor(Math.random() * 4) + 6 : val = Math.floor(Math.random() * 5) + 1;
+            const el = document.createElement('div');
+            el.className = 'tile'; el.innerText = val; gridEl.appendChild(el);
+            tiles.push({ el, val, removed: false });
+        }
+    }
+
+    function startTimer() {
+        if(timer) clearInterval(timer);
+        timer = setInterval(() => {
+            timeLeft += 0.1;
+            document.getElementById('progressBar').style.width = (timeLeft / 120) * 100 + '%';
+            if (timeLeft >= 120) { clearInterval(timer); showEnd(); }
+        }, 100);
+    }
+
+    function showEnd() {
+        sounds.game.pause();
+        if (isBGMEnabled) sounds.end.play().catch(()=>{});
+        document.getElementById('gameScreen').classList.remove('active');
+        document.getElementById('endScreen').classList.add('active');
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('finalLevelDesc').innerText = modeNames[level];
+    }
+
     updateVolume();
+    document.body.addEventListener('touchstart', () => {
+        if (isBGMEnabled && document.getElementById('startScreen').classList.contains('active')) sounds.menu.play().catch(()=>{});
+    }, { once: true });
 </script>
 </body>
 </html>
