@@ -225,73 +225,40 @@
     gridEl.innerHTML = '<div id="selectionBox"></div>'; 
     tiles = [];
 
-    // 目标总和
     const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
     const totalTiles = 180;
     const nums = [];
-
-    // 1. 先按平均生成所有数字，确保差值可控
     let currentSum = 0;
+
+    // 1. 完全随机填充 (保证1-9分布自然)
     for (let i = 0; i < totalTiles; i++) {
-        // 先给一个接近平均值的数，减少后续调整压力
-        const avg = targetSum / totalTiles;
-        const val = Math.floor(Math.random() * 5) + Math.floor(avg) - 1;
-        const safeVal = Math.max(1, Math.min(9, val));
-        nums.push(safeVal);
-        currentSum += safeVal;
+        const val = Math.floor(Math.random() * 9) + 1;
+        nums.push(val);
+        currentSum += val;
     }
 
     let diff = targetSum - currentSum;
 
-    // 2. 分阶段调整，避免循环卡死
-    // 优先调整非边界的数字，保证每次都能有效缩小差值
+    // 2. 高效调整：每一轮尽可能多地填补差值
     while (diff !== 0) {
-        let adjusted = false;
-        for (let i = 0; i < totalTiles; i++) {
-            const cur = nums[i];
-            if (diff > 0 && cur < 9) {
+        for (let i = 0; i < totalTiles && diff !== 0; i++) {
+            if (diff > 0 && nums[i] < 9) {
                 nums[i]++;
                 diff--;
-                adjusted = true;
-                break;
-            } else if (diff < 0 && cur > 1) {
+            } else if (diff < 0 && nums[i] > 1) {
                 nums[i]--;
                 diff++;
-                adjusted = true;
-                break;
-            }
-        }
-        // 如果没调整到，说明大部分数字都到边界了，强制从非边界调整
-        if (!adjusted) {
-            if (diff > 0) {
-                // 强制找一个不是9的数加1
-                for (let i = 0; i < totalTiles; i++) {
-                    if (nums[i] < 9) {
-                        nums[i]++;
-                        diff--;
-                        break;
-                    }
-                }
-            } else {
-                // 强制找一个不是1的数减1
-                for (let i = 0; i < totalTiles; i++) {
-                    if (nums[i] > 1) {
-                        nums[i]--;
-                        diff++;
-                        break;
-                    }
-                }
             }
         }
     }
 
-    // 3. 打乱顺序，让数字分布更自然
+    // 3. 随机洗牌 (关键：让调整过的数字均匀散开)
     for (let i = nums.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [nums[i], nums[j]] = [nums[j], nums[i]];
     }
 
-    // 4. 渲染到页面
+    // 4. 渲染
     for (const val of nums) {
         const el = document.createElement('div');
         el.className = 'tile';
