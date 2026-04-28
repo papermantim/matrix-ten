@@ -221,40 +221,55 @@
     }
 
     function initGrid() {
-        const gridEl = document.getElementById('gameGrid');
-        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
-        tiles = [];
-        
-        const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
-        let currentSum = 0;
+    const gridEl = document.getElementById('gameGrid');
+    gridEl.innerHTML = '<div id="selectionBox"></div>'; 
+    tiles = [];
 
-        // 1. 前 170 个格子采用完全随机 (1-9 概率均等)
-        for (let i = 0; i < 170; i++) {
-            let val = Math.floor(Math.random() * 9) + 1;
-            currentSum += val;
-            const el = document.createElement('div');
-            el.className = 'tile'; el.innerText = val; gridEl.appendChild(el);
-            tiles.push({ el, val, removed: false });
-        }
+    // 目标总和
+    const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
+    const totalTiles = 180;
+    const nums = [];
 
-        // 2. 剩余 10 个格子用于平滑地补齐差距
-        for (let i = 170; i < 180; i++) {
-            let remainingSlots = 180 - i;
-            let remainingSum = targetSum - currentSum;
-            
-            // 计算当前格子必须满足的最小值和最大值，确保不超出 1-9
-            let min = Math.max(1, remainingSum - (remainingSlots - 1) * 9);
-            let max = Math.min(9, remainingSum - (remainingSlots - 1) * 1);
-            
-            // 在安全范围内随机选择，这样数字分布会非常接近 1-9 的自然分布
-            let val = Math.floor(Math.random() * (max - min + 1)) + min;
-            
-            currentSum += val;
-            const el = document.createElement('div');
-            el.className = 'tile'; el.innerText = val; gridEl.appendChild(el);
-            tiles.push({ el, val, removed: false });
+    // 第一步：全部先生成 1~9 纯随机
+    let nowSum = 0;
+    for (let i = 0; i < totalTiles; i++) {
+        const v = Math.floor(Math.random() * 9) + 1;
+        nums.push(v);
+        nowSum += v;
+    }
+
+    // 第二步：平滑微调差值，不会爆边界，不会狂出1
+    let diff = targetSum - nowSum;
+
+    while (diff !== 0) {
+        // 随机选一个格子调整
+        const idx = Math.floor(Math.random() * totalTiles);
+        const cur = nums[idx];
+
+        if (diff > 0) {
+            // 需要加总和：当前小于9才能+1
+            if (cur < 9) {
+                nums[idx]++;
+                diff--;
+            }
+        } else {
+            // 需要减总和：当前大于1才能-1
+            if (cur > 1) {
+                nums[idx]--;
+                diff++;
+            }
         }
     }
+
+    // 第三步：渲染到页面
+    for (const val of nums) {
+        const el = document.createElement('div');
+        el.className = 'tile';
+        el.innerText = val;
+        gridEl.appendChild(el);
+        tiles.push({ el, val, removed: false });
+    }
+}
 
     function startTimer() {
         if(timer) clearInterval(timer);
