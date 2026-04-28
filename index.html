@@ -224,15 +224,35 @@
         const gridEl = document.getElementById('gameGrid');
         gridEl.innerHTML = '<div id="selectionBox"></div>'; 
         tiles = [];
-        for (let i = 0; i < 180; i++) {
-            let val; const r = Math.random();
+        let currentSum = 0; // 用于累计总和
+
+        // 生成前 179 个格子 (总数 180 - 1)
+        for (let i = 0; i < 179; i++) {
+            let val; 
+            const r = Math.random();
             if (level === 1) r < 0.65 ? val = Math.floor(Math.random() * 5) + 1 : val = Math.floor(Math.random() * 4) + 6;
             else if (level === 2) val = Math.floor(Math.random() * 9) + 1;
             else r < 0.6 ? val = Math.floor(Math.random() * 4) + 6 : val = Math.floor(Math.random() * 5) + 1;
+            
+            currentSum += val;
             const el = document.createElement('div');
             el.className = 'tile'; el.innerText = val; gridEl.appendChild(el);
             tiles.push({ el, val, removed: false });
         }
+
+        // --- 核心补偿逻辑：生成第 180 个格子 ---
+        // 目标是让 (currentSum + lastVal) % 10 === 0
+        let lastVal = (10 - (currentSum % 10)) % 10;
+        
+        // 如果刚好凑整了（lastVal为0），记事本逻辑里数字不能为0，所以我们设为10（在玩法中10也是可以的）
+        // 或者更稳妥的做法是让它变成 10，这样依然符合整除逻辑
+        if (lastVal === 0) lastVal = 10; 
+
+        const lastEl = document.createElement('div');
+        lastEl.className = 'tile'; 
+        lastEl.innerText = lastVal; 
+        gridEl.appendChild(lastEl);
+        tiles.push({ el: lastEl, val: lastVal, removed: false });
     }
 
     function startTimer() {
