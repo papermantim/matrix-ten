@@ -224,15 +224,22 @@
         const gridEl = document.getElementById('gameGrid');
         gridEl.innerHTML = '<div id="selectionBox"></div>'; 
         tiles = [];
-        let currentSum = 0; // 用于累计总和
+        let currentSum = 0;
 
-        // 生成前 179 个格子 (总数 180 - 1)
+        // 1. 生成前 179 个格子，并严格遵循各模式权重
         for (let i = 0; i < 179; i++) {
             let val; 
             const r = Math.random();
-            if (level === 1) r < 0.65 ? val = Math.floor(Math.random() * 5) + 1 : val = Math.floor(Math.random() * 4) + 6;
-            else if (level === 2) val = Math.floor(Math.random() * 9) + 1;
-            else r < 0.6 ? val = Math.floor(Math.random() * 4) + 6 : val = Math.floor(Math.random() * 5) + 1;
+            if (level === 1) {
+                // SIMPLE: 1-5 占 65%, 6-9 占 35%
+                r < 0.65 ? val = Math.floor(Math.random() * 5) + 1 : val = Math.floor(Math.random() * 4) + 6;
+            } else if (level === 2) {
+                // NORMAL: 1-9 均匀随机
+                val = Math.floor(Math.random() * 9) + 1;
+            } else {
+                // HARD: 6-9 占 60%, 1-5 占 40%
+                r < 0.6 ? val = Math.floor(Math.random() * 4) + 6 : val = Math.floor(Math.random() * 5) + 1;
+            }
             
             currentSum += val;
             const el = document.createElement('div');
@@ -240,19 +247,24 @@
             tiles.push({ el, val, removed: false });
         }
 
-        // --- 核心补偿逻辑：生成第 180 个格子 ---
-        // 目标是让 (currentSum + lastVal) % 10 === 0
+        // 2. 计算最后一个格子需要的凑整数字
         let lastVal = (10 - (currentSum % 10)) % 10;
         
-        // 如果刚好凑整了（lastVal为0），记事本逻辑里数字不能为0，所以我们设为10（在玩法中10也是可以的）
-        // 或者更稳妥的做法是让它变成 10，这样依然符合整除逻辑
-        if (lastVal === 0) lastVal = 10; 
+        // 3. 避免出现数字 10 的特殊处理
+        if (lastVal === 0) {
+            // 如果正好整除，则把最后两个格子调整为 5 和 5，总和仍能整除10
+            let lastTile = tiles.pop();
+            lastTile.val = 5;
+            lastTile.el.innerText = 5;
+            tiles.push(lastTile);
+            lastVal = 5;
+        }
 
-        const lastEl = document.createElement('div');
-        lastEl.className = 'tile'; 
-        lastEl.innerText = lastVal; 
-        gridEl.appendChild(lastEl);
-        tiles.push({ el: lastEl, val: lastVal, removed: false });
+        const finalEl = document.createElement('div');
+        finalEl.className = 'tile'; 
+        finalEl.innerText = lastVal; 
+        gridEl.appendChild(finalEl);
+        tiles.push({ el: finalEl, val: lastVal, removed: false });
     }
 
     function startTimer() {
