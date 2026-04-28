@@ -222,24 +222,26 @@
 
     function initGrid() {
         const gridEl = document.getElementById('gameGrid');
-        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
+        gridEl.innerHTML = '<div id=\"selectionBox\"></div>'; 
         tiles = [];
+        
+        // 1. 根据你的要求规定各模式总和
+        const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
         let currentSum = 0;
 
-        // 1. 生成前 179 个格子，并严格遵循各模式权重
+        // 2. 生成前 179 个格子
         for (let i = 0; i < 179; i++) {
-            let val; 
-            const r = Math.random();
-            if (level === 1) {
-                // SIMPLE: 1-5 占 65%, 6-9 占 35%
-                r < 0.65 ? val = Math.floor(Math.random() * 5) + 1 : val = Math.floor(Math.random() * 4) + 6;
-            } else if (level === 2) {
-                // NORMAL: 1-9 均匀随机
-                val = Math.floor(Math.random() * 9) + 1;
-            } else {
-                // HARD: 6-9 占 60%, 1-5 占 40%
-                r < 0.6 ? val = Math.floor(Math.random() * 4) + 6 : val = Math.floor(Math.random() * 5) + 1;
-            }
+            // 计算当前剩余的平均值，动态调整随机范围，防止总和提前溢出或不足
+            let remainingSlots = 180 - i;
+            let remainingSum = targetSum - currentSum;
+            let avgNeeded = remainingSum / remainingSlots;
+            
+            // 动态上下限：保证剩下的格子至少能填 1，至多能填 9
+            let min = Math.max(1, Math.floor(remainingSum - (remainingSlots - 1) * 9));
+            let max = Math.min(9, Math.ceil(remainingSum - (remainingSlots - 1) * 1));
+            
+            // 在动态范围内随机生成
+            let val = Math.floor(Math.random() * (max - min + 1)) + min;
             
             currentSum += val;
             const el = document.createElement('div');
@@ -247,19 +249,8 @@
             tiles.push({ el, val, removed: false });
         }
 
-        // 2. 计算最后一个格子需要的凑整数字
-        let lastVal = (10 - (currentSum % 10)) % 10;
-        
-        // 3. 避免出现数字 10 的特殊处理
-        if (lastVal === 0) {
-            // 如果正好整除，则把最后两个格子调整为 5 和 5，总和仍能整除10
-            let lastTile = tiles.pop();
-            lastTile.val = 5;
-            lastTile.el.innerText = 5;
-            tiles.push(lastTile);
-            lastVal = 5;
-        }
-
+        // 3. 最后一个格子补齐差额（它必然在 1-9 之间，且总和必等于 targetSum）
+        let lastVal = targetSum - currentSum;
         const finalEl = document.createElement('div');
         finalEl.className = 'tile'; 
         finalEl.innerText = lastVal; 
