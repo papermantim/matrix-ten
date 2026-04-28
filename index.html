@@ -222,25 +222,31 @@
 
     function initGrid() {
         const gridEl = document.getElementById('gameGrid');
-        gridEl.innerHTML = '<div id=\"selectionBox\"></div>'; 
+        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
         tiles = [];
         
-        // 1. 根据你的要求规定各模式总和
         const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
         let currentSum = 0;
 
-        // 2. 生成前 179 个格子
-        for (let i = 0; i < 179; i++) {
-            // 计算当前剩余的平均值，动态调整随机范围，防止总和提前溢出或不足
+        // 1. 前 170 个格子采用完全随机 (1-9 概率均等)
+        for (let i = 0; i < 170; i++) {
+            let val = Math.floor(Math.random() * 9) + 1;
+            currentSum += val;
+            const el = document.createElement('div');
+            el.className = 'tile'; el.innerText = val; gridEl.appendChild(el);
+            tiles.push({ el, val, removed: false });
+        }
+
+        // 2. 剩余 10 个格子用于平滑地补齐差距
+        for (let i = 170; i < 180; i++) {
             let remainingSlots = 180 - i;
             let remainingSum = targetSum - currentSum;
-            let avgNeeded = remainingSum / remainingSlots;
             
-            // 动态上下限：保证剩下的格子至少能填 1，至多能填 9
-            let min = Math.max(1, Math.floor(remainingSum - (remainingSlots - 1) * 9));
-            let max = Math.min(9, Math.ceil(remainingSum - (remainingSlots - 1) * 1));
+            // 计算当前格子必须满足的最小值和最大值，确保不超出 1-9
+            let min = Math.max(1, remainingSum - (remainingSlots - 1) * 9);
+            let max = Math.min(9, remainingSum - (remainingSlots - 1) * 1);
             
-            // 在动态范围内随机生成
+            // 在安全范围内随机选择，这样数字分布会非常接近 1-9 的自然分布
             let val = Math.floor(Math.random() * (max - min + 1)) + min;
             
             currentSum += val;
@@ -248,14 +254,6 @@
             el.className = 'tile'; el.innerText = val; gridEl.appendChild(el);
             tiles.push({ el, val, removed: false });
         }
-
-        // 3. 最后一个格子补齐差额（它必然在 1-9 之间，且总和必等于 targetSum）
-        let lastVal = targetSum - currentSum;
-        const finalEl = document.createElement('div');
-        finalEl.className = 'tile'; 
-        finalEl.innerText = lastVal; 
-        gridEl.appendChild(finalEl);
-        tiles.push({ el: finalEl, val: lastVal, removed: false });
     }
 
     function startTimer() {
