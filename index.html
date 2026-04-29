@@ -5,100 +5,197 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root {
+            --border-3d-outset: 2px solid; 
+            --font-family: 'Courier New', Courier, monospace;
+        }
+
+        /* 主题 1: Retro (默认) */
+        .theme-retro {
             --retro-bg: #EED7D8; 
             --panel-white: #F6F3EB;
             --tile-soft-yellow: #F2E5BF; 
             --accent-orange: #E9531D;
-            --text-dark: #3D1B11;
-            --border-3d-outset: 2px solid var(--text-dark);
+            --text-primary: #3D1B11; 
+            --text-on-btn: #3D1B11; 
+            --border-3d-color: #3D1B11; 
             --box-shadow-3d: inset 2px 2px 0 rgba(255,255,255,0.7), 4px 4px 0 rgba(0,0,0,0.2);
             --box-shadow-btn: 3px 3px 0 rgba(0,0,0,0.3);
+            --window-title-bg: #CFC5C0;
+            --btn-bg: #E0E0D8; 
+            --tile-text: #3D1B11; 
+            --scanlines-ui: none;
+            --neon-glow: none;
+            
+            --switch-track-bg: #CFC5C0;
+            --switch-track-shadow: inset 2px 2px 4px rgba(0,0,0,0.3);
+            --switch-thumb-highlight: inset 1px 1px 0 rgba(255,255,255,0.6);
+            --switch-text-inactive: #968F8A;
+
+            --bg-scanline-color: rgba(61, 27, 17, 0.08); 
+            --bg-vignette: radial-gradient(circle, transparent 40%, rgba(61, 27, 17, 0.2) 130%);
+            
+            --global-radius: 4px;
+            --btn-radius: 2px;
+            --ctrl-btn-radius: 50%;
+            --btn-text-align: center;
         }
 
-        /* 关键：touch-action: none 防止浏览器默认的手势干扰（如滑动翻页） */
+        /* 主题 2: Cyber */
+        .theme-cyber {
+            --retro-bg: #1C0E3A; 
+            --panel-white: #31236A; 
+            --accent-orange: #A0D08A; 
+            --text-primary: #FFFFFF; 
+            --text-on-btn: #FFFFFF; 
+            --border-3d-color: #10061E; 
+            --box-shadow-3d: 8px 8px 0 rgba(0,0,0,0.8); 
+            --box-shadow-btn: 5px 5px 0 #10061E;
+            --window-title-bg: #45388D;
+            --btn-bg: #45388D; 
+            --tile-text: #A0D08A; 
+            --scanlines-ui: repeating-linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 2px); 
+            --neon-glow: 0 0 10px rgba(160, 208, 138, 0.6), 0 0 20px rgba(160, 208, 138, 0.4);
+
+            --switch-track-bg: #10061E;
+            --switch-track-shadow: inset 2px 2px 6px rgba(0,0,0,0.8);
+            --switch-thumb-highlight: inset 1px 1px 0 rgba(255,255,255,0.4);
+            --switch-text-inactive: #45388D;
+
+            --bg-scanline-color: rgba(160, 208, 138, 0.1); 
+            --bg-vignette: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.8) 130%);
+
+            --global-radius: 0px; 
+            --btn-radius: 0px;
+            --ctrl-btn-radius: 0px; 
+            --btn-text-align: left; 
+        }
+
         * { outline: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; touch-action: none; }
 
         body { 
             background: var(--retro-bg); margin: 0; overflow: hidden; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; font-family: 'Courier New', Courier, monospace;
-            user-select: none; color: var(--text-dark);
+            height: 100vh; font-family: var(--font-family);
+            user-select: none; color: var(--text-primary);
+            transition: background 0.3s ease;
+            position: relative;
         }
 
-        .screen { display: none; flex-direction: column; align-items: center; width: 100%; }
-        .screen.active { display: flex; }
+        body::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(transparent, transparent 2px, var(--bg-scanline-color) 2px, var(--bg-scanline-color) 4px);
+            background-size: 100% 4px; z-index: -2; pointer-events: none; animation: scanlineMove 20s linear infinite;
+        }
+        body::after {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-vignette); z-index: -1; pointer-events: none; transition: background 0.3s ease;
+        }
+        @keyframes scanlineMove { 0% { background-position: 0 0; } 100% { background-position: 0 40px; } }
 
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; z-index: 1; }
+        .screen.active { display: flex; }
         #gameScreen.active { gap: 10px; } 
 
         .window {
             background: var(--panel-white);
-            border: var(--border-3d-outset);
+            border: var(--border-3d-outset) var(--border-3d-color);
             box-shadow: var(--box-shadow-3d);
-            border-radius: 4px;
+            border-radius: var(--global-radius); 
             overflow: hidden;
             display: flex; flex-direction: column; align-items: center;
+            position: relative; 
+            transition: all 0.3s ease;
         }
 
         .window-title {
-            width: 100%; height: 28px; background: #CFC5C0; 
-            border-bottom: var(--border-3d-outset);
+            width: 100%; height: 28px; background: var(--window-title-bg); 
+            border-bottom: var(--border-3d-outset) var(--border-3d-color);
             margin-bottom: 20px; padding: 0 10px;
             display: flex; align-items: center; justify-content: space-between;
             font-weight: bold; letter-spacing: 1px; font-size: 14px;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
+        .theme-cyber .window-title { border-bottom-style: dashed; }
         .window-controls { display: flex; gap: 4px; }
-        .win-btn { width: 16px; height: 16px; border: 1px solid var(--text-dark); border-radius: 50%; }
+        .win-btn { width: 16px; height: 16px; border: 1px solid var(--border-3d-color); border-radius: var(--ctrl-btn-radius); transition: all 0.3s; }
 
         h1 { font-size: 2.2rem; letter-spacing: 2px; margin: 10px 0 25px; text-transform: uppercase; font-weight: bold;}
         
         .btn {
-            background: #E0E0D8; border: var(--border-3d-outset); color: var(--text-dark);
-            padding: 12px 0; font-size: 1rem; cursor: pointer; margin: 6px;
-            transition: all 0.1s; border-radius: 2px; letter-spacing: 1px; font-family: inherit; font-weight: bold;
+            background: var(--btn-bg); border: var(--border-3d-outset) var(--border-3d-color); color: var(--text-on-btn);
+            padding: 12px 20px; font-size: 1rem; cursor: pointer; margin: 6px;
+            transition: all 0.1s; border-radius: var(--btn-radius); letter-spacing: 1px; font-family: inherit; font-weight: bold;
             box-shadow: var(--box-shadow-btn);
-            min-width: 240px;
-            text-align: center;
+            min-width: 240px; /* 主按钮最小宽度 */
+            text-align: var(--btn-text-align); 
+            text-transform: uppercase;
+            position: relative;
         }
-        .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
+        .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(0,0,0,0.5); }
+
+        .theme-cyber .btn::before { content: "> "; color: var(--accent-orange); margin-right: 5px; opacity: 0.8; font-weight: bold;}
+        .theme-cyber .btn:hover::before { content: "> "; color: #FFF; text-shadow: var(--neon-glow); opacity: 1; }
+
+        /* ==============================================
+           新增：重置按钮的专属样式，覆盖默认的主菜单按钮宽度
+           ============================================== */
+        .reset-btn {
+            min-width: 100px; /* 取消宽排版，让它小巧一点 */
+            padding: 6px 15px; /* 变得更薄 */
+            margin: 0; /* 移除外边距以便和进度条紧密配合 */
+            font-size: 0.9rem;
+        }
 
         .audio-settings-row {
             margin-top: 30px; padding: 15px 15px; width: 90%;
             display: flex; flex-direction: row; align-items: center; justify-content: center;
             gap: 25px; border-top: 2px dashed #B3B1AD;
         }
+        .theme-cyber .audio-settings-row { border-top-color: var(--border-3d-color); }
         
-        .setting-control { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 900; color: var(--text-dark); letter-spacing: 0.5px; }
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; }
+        .setting-control { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 900; color: var(--text-primary); letter-spacing: 0.5px; }
+        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; margin: 0; border-radius: 0; }
         input[type="range"] { width: 110px; accent-color: var(--accent-orange); cursor: pointer; height: 5px; }
 
-        /* 游戏界面缩放：保持你的 0.85 缩放，这很适合 iPad 横屏 */
+        .theme-switch-panel {
+            margin-top: 30px; background: var(--panel-white); border: var(--border-3d-outset) var(--border-3d-color);
+            box-shadow: var(--box-shadow-3d); border-radius: var(--global-radius); padding: 12px 25px;
+            display: flex; align-items: center; gap: 15px; cursor: pointer; transition: all 0.3s ease; z-index: 1;
+        }
+        .switch-label { font-size: 14px; font-weight: bold; letter-spacing: 1px; transition: color 0.3s; }
+        .label-retro { color: var(--text-primary); }
+        .label-cyber { color: var(--switch-text-inactive); }
+        .theme-cyber .label-retro { color: var(--switch-text-inactive); }
+        .theme-cyber .label-cyber { color: var(--accent-orange); text-shadow: 0 0 5px rgba(160, 208, 138, 0.5); }
+        .switch-track { width: 56px; height: 24px; background: var(--switch-track-bg); border: 2px solid var(--border-3d-color); border-radius: 12px; position: relative; box-shadow: var(--switch-track-shadow); transition: background 0.3s; }
+        .theme-cyber .switch-track { border-radius: 0px; } 
+        .switch-thumb { width: 20px; height: 20px; background: var(--accent-orange); border: 2px solid var(--border-3d-color); border-radius: 50%; position: absolute; top: 0; left: 0; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: var(--switch-thumb-highlight), 2px 2px 0 rgba(0,0,0,0.3); }
+        .theme-cyber .switch-thumb { border-radius: 0; transform: translateX(32px); box-shadow: var(--switch-thumb-highlight), 0 0 8px var(--accent-orange); }
+        
         #gameScreen .window { transform: scale(0.85); transform-origin: center center; margin: -25px 0; }
         .game-header { width: 1180px; padding: 10px; }
         .grid-window { padding: 5px; }
-
-        .progress-container { width: 100%; height: 8px; background: #CCC5C0; border: 1px solid var(--text-dark); border-radius: 4px; overflow: hidden; position: relative; }
+        .progress-container { width: 100%; height: 8px; background: #CCC5C0; border: 1px solid var(--border-3d-color); border-radius: var(--global-radius); overflow: hidden; position: relative; }
+        .theme-cyber .progress-container { background: #10061E; }
         #progressBar { width: 0%; height: 100%; background: var(--accent-orange); transition: width 0.1s linear; }
-
-        .grid {
-            display: grid; grid-template-columns: repeat(18, 60px); grid-template-rows: repeat(10, 60px);
-            gap: 6px; position: relative; padding: 10px; cursor: crosshair;
-        }
-
-        .tile {
-            width: 60px; height: 60px; background: var(--tile-soft-yellow); 
-            color: var(--text-dark); display: flex; justify-content: center; align-items: center;
-            font-size: 28px; border: 2px solid var(--text-dark); border-radius: 3px; pointer-events: none;
-            font-weight: 800; transition: transform 0.1s ease, background 0.1s ease;
-        }
-
-        .tile.highlight { background: var(--accent-orange); color: white; border-color: #A03913; transform: scale(1.05) rotate(3deg); z-index: 2; }
+        
+        .grid { display: grid; grid-template-columns: repeat(18, 60px); grid-template-rows: repeat(10, 60px); gap: 6px; position: relative; padding: 10px; cursor: crosshair; }
+        .tile { width: 60px; height: 60px; background: var(--tile-soft-yellow); color: var(--tile-text); display: flex; justify-content: center; align-items: center; font-size: 28px; border: 2px solid var(--border-3d-color); border-radius: 3px; pointer-events: none; font-weight: 800; transition: transform 0.1s ease, background 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease; position: relative; }
+        .theme-cyber .tile { background: transparent; border-radius: 0; border-color: rgba(160, 208, 138, 0.3); text-shadow: 0 0 5px rgba(160, 208, 138, 0.5); }
+        .theme-cyber .tile.highlight { background: var(--accent-orange); box-shadow: var(--neon-glow); color: #000000; text-shadow: none; border-color: #FFFFFF; transform: scale(1.05) rotate(0deg); }
+        .theme-retro .tile.highlight { background: var(--accent-orange); color: white; border-color: #A03913; transform: scale(1.05) rotate(3deg); z-index: 2; }
         .tile.removed { animation: shrink-away 0.3s forwards; pointer-events: none; }
         @keyframes shrink-away { 0% { transform: scale(1) rotate(3deg); opacity: 1; } 100% { transform: scale(0) rotate(20deg); opacity: 0; } }
+        .theme-cyber .tile.removed { animation: cyber-shrink 0.3s forwards; }
+        @keyframes cyber-shrink { 0% { transform: scale(1); filter: brightness(1); opacity: 1; } 100% { transform: scale(0); filter: brightness(2); opacity: 0; } }
 
         #selectionBox { position: absolute; border: 2px solid var(--accent-orange); background: rgba(233, 83, 29, 0.1); pointer-events: none; display: none; z-index: 10; }
+        .theme-cyber #selectionBox { border-style: dashed; background: rgba(160, 208, 138, 0.15); box-shadow: 0 0 10px rgba(160, 208, 138, 0.3); }
+        .window::before, .tile::before { content: ""; display: var(--scanlines-ui, none); position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 1; z-index: 0; }
+        .window > *, .tile > * { position: relative; z-index: 1; }
     </style>
 </head>
-<body>
+<body class="theme-retro"> 
 
     <div id="startScreen" class="screen active">
         <div class="window" style="padding: 0 0 10px; width: 520px;">
@@ -107,20 +204,32 @@
             <button class="btn" onclick="startGame(1)">SIMPLE MODE</button>
             <button class="btn" onclick="startGame(2)">NORMAL MODE</button>
             <button class="btn" onclick="startGame(3)">HARD MODE</button>
+            
             <div class="audio-settings-row">
                 <div class="setting-control"><input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()"><label for="bgmToggle" style="cursor: pointer;">ENABLE BGM</label></div>
                 <div class="setting-control"><span>VOLUME:</span><input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" oninput="updateVolume()"></div>
             </div>
         </div>
+        
+        <div class="theme-switch-panel" onclick="toggleTheme()">
+            <span class="switch-label label-retro">RETRO</span>
+            <div class="switch-track"><div class="switch-thumb"></div></div>
+            <span class="switch-label label-cyber">CYBER</span>
+        </div>
     </div>
 
     <div id="gameScreen" class="screen">
         <div class="game-header window" style="align-items: stretch;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1.1rem; letter-spacing: 1px; font-weight: bold;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.1rem; letter-spacing: 1px; font-weight: bold;">
                 <span id="scoreDisplay">SCORE: 0</span>
                 <span id="levelDisplay" style="color: var(--accent-orange);">NORMAL MODE</span>
             </div>
-            <div class="progress-container"><div id="progressBar"></div></div>
+            
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="progress-container" style="flex: 1;"><div id="progressBar"></div></div>
+                <button class="btn reset-btn" onclick="resetToMenu()">RESET</button>
+            </div>
+            
         </div>
         <div class="window grid-window">
             <div class="grid" id="gameGrid"><div id="selectionBox"></div></div>
@@ -146,22 +255,24 @@
     let isBGMEnabled = true, currentVolume = 0.5, score = 0, level = 1, timeLeft = 0, isDragging = false, startX, startY, tiles = [], timer = null;
     const modeNames = ["", "SIMPLE MODE", "NORMAL MODE", "HARD MODE"];
 
+    let isCyberTheme = false;
+    function toggleTheme() {
+        sounds.click.currentTime = 0; sounds.click.play().catch(()=>{});
+        isCyberTheme = !isCyberTheme;
+        document.body.className = isCyberTheme ? 'theme-cyber' : 'theme-retro';
+    }
+
     function updateVolume() { currentVolume = document.getElementById('volumeSlider').value; Object.values(sounds).forEach(s => s.volume = currentVolume); }
     function toggleBGM() { isBGMEnabled = document.getElementById('bgmToggle').checked; if (!isBGMEnabled) Object.values(sounds).forEach(s=>s.pause()); else if(document.getElementById('startScreen').classList.contains('active')) sounds.menu.play().catch(()=>{}); }
 
-    // 适配 iPad 的交互逻辑
     const grid = document.getElementById('gameGrid');
     const selBox = () => document.getElementById('selectionBox'); 
 
-    // 辅助函数：统一获取鼠标或手指的坐标
     function getEventPos(e) {
         const rect = grid.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return {
-            x: (clientX - rect.left) / 0.85, 
-            y: (clientY - rect.top) / 0.85
-        };
+        return { x: (clientX - rect.left) / 0.85, y: (clientY - rect.top) / 0.85 };
     }
 
     function handleStart(e) {
@@ -175,7 +286,7 @@
 
     function handleMove(e) {
         if (!isDragging) return;
-        if (e.cancelable) e.preventDefault(); // 防止 iPad 滚动页面
+        if (e.cancelable) e.preventDefault(); 
         const pos = getEventPos(e);
         let x = Math.min(startX, pos.x), y = Math.min(startY, pos.y), w = Math.abs(startX - pos.x), h = Math.abs(startY - pos.y);
         const box = selBox();
@@ -201,18 +312,45 @@
         tiles.forEach(t => t.el.classList.remove('highlight'));
     }
 
-    // 绑定鼠标和触控事件
     grid.addEventListener('mousedown', handleStart);
     window.addEventListener('mousemove', handleMove, { passive: false });
     window.addEventListener('mouseup', handleEnd);
-
     grid.addEventListener('touchstart', handleStart, { passive: false });
     window.addEventListener('touchmove', handleMove, { passive: false });
     window.addEventListener('touchend', handleEnd);
 
-    // 其余游戏逻辑保持不变
+    // ==============================================
+    // 新增：安全退回主菜单功能
+    // ==============================================
+    function resetToMenu() {
+        // 播放按钮音效
+        sounds.click.currentTime = 0; 
+        sounds.click.play().catch(()=>{});
+        
+        // 停止并清理计时器
+        if(timer) clearInterval(timer);
+        
+        // 音效切换：停掉游戏音乐，恢复菜单音乐
+        sounds.game.pause();
+        if (isBGMEnabled) {
+            sounds.menu.currentTime = 0; 
+            sounds.menu.play().catch(()=>{});
+        }
+        
+        // 切换界面
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('startScreen').classList.add('active');
+    }
+
     function startGame(lv) {
-        level = lv; sounds.menu.pause();
+        level = lv; 
+        
+        // 修复：每次重新开始游戏需要强制清零分数和时间
+        score = 0;
+        timeLeft = 0;
+        document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+
+        sounds.menu.pause();
         if (isBGMEnabled) { sounds.game.currentTime = 0; sounds.game.play().catch(()=>{}); }
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('gameScreen').classList.add('active');
@@ -221,52 +359,39 @@
     }
 
     function initGrid() {
-    const gridEl = document.getElementById('gameGrid');
-    gridEl.innerHTML = '<div id="selectionBox"></div>'; 
-    tiles = [];
-
-    const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
-    const totalTiles = 180;
-    const nums = [];
-    let currentSum = 0;
-
-    // 1. 完全随机填充 (保证1-9分布自然)
-    for (let i = 0; i < totalTiles; i++) {
-        const val = Math.floor(Math.random() * 9) + 1;
-        nums.push(val);
-        currentSum += val;
-    }
-
-    let diff = targetSum - currentSum;
-
-    // 2. 高效调整：每一轮尽可能多地填补差值
-    while (diff !== 0) {
-        for (let i = 0; i < totalTiles && diff !== 0; i++) {
-            if (diff > 0 && nums[i] < 9) {
-                nums[i]++;
-                diff--;
-            } else if (diff < 0 && nums[i] > 1) {
-                nums[i]--;
-                diff++;
+        const gridEl = document.getElementById('gameGrid');
+        gridEl.innerHTML = '<div id="selectionBox"></div>'; 
+        tiles = [];
+        const targetSum = level === 1 ? 750 : (level === 2 ? 800 : 850);
+        const totalTiles = 180;
+        const nums = [];
+        let currentSum = 0;
+        for (let i = 0; i < totalTiles; i++) {
+            const val = Math.floor(Math.random() * 9) + 1;
+            nums.push(val);
+            currentSum += val;
+        }
+        let diff = targetSum - currentSum;
+        while (diff !== 0) {
+            for (let i = 0; i < totalTiles && diff !== 0; i++) {
+                if (diff > 0 && nums[i] < 9) { nums[i]++; diff--; }
+                else if (diff < 0 && nums[i] > 1) { nums[i]--; diff++; }
             }
         }
+        for (let i = nums.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [nums[i], j] && ([nums[i], nums[j]] = [nums[j], nums[i]]);
+        }
+        for (const val of nums) {
+            const el = document.createElement('div');
+            el.className = 'tile';
+            const span = document.createElement('span'); 
+            span.innerText = val;
+            el.appendChild(span);
+            gridEl.appendChild(el);
+            tiles.push({ el, val, removed: false });
+        }
     }
-
-    // 3. 随机洗牌 (关键：让调整过的数字均匀散开)
-    for (let i = nums.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [nums[i], nums[j]] = [nums[j], nums[i]];
-    }
-
-    // 4. 渲染
-    for (const val of nums) {
-        const el = document.createElement('div');
-        el.className = 'tile';
-        el.innerText = val;
-        gridEl.appendChild(el);
-        tiles.push({ el, val, removed: false });
-    }
-}
 
     function startTimer() {
         if(timer) clearInterval(timer);
